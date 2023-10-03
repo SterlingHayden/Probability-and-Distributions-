@@ -1,0 +1,585 @@
+---
+title: "Assignment 3"
+author: "Sterling Hayden, Makenzie Woodruff, Noah Buchanan, Nafisa Sadaf"
+date: "Fall 2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+urlcolor: blue
+---
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 5, fig.height = 3, fig.align = "center")
+```
+
+
+# Introduction
+
+**Homework must be submitted as a single pdf file using Gradescope.**
+
+The objective of this assignment is to familiarize yourself with probability. In the assignment, you will solve problems by hand as well as within `R` using `RMarkdown`. Please work with your teams on this assignment and submit to Gradescope. 
+
+# Getting Started
+
+On the **Assignments** page on Blackboard, download the `.Rmd` file and upload the `.Rmd` file into a folder titled `HW3` in your `RStudio` project directory. Make sure to create a folder called `R` and upload the `multiplot.R` function into the `R` folder if you wish to use the `multiplot()` function. Also create a folder titled `images` for your uploaded images.
+
+```{r, message=FALSE, warning=FALSE}
+## setup, load libraries and functions
+library(openintro)
+library(kableExtra)
+library(here)
+library(ggplot2)
+library(knitr)
+library(tidyverse)
+library(ggeasy)
+library(dplyr)
+```
+
+
+
+
+# Using Hand-written solutions in `RMarkdown`
+
+For this assignment, you will be allowed to write out solutions by hand if you desire. Once the solution is written out by hand, take a photo and email it to yourself and upload the file to a folder titled `images` in your project. For example, if you take the photo titled `hw3-page1.jpg`, move the photo to the `images` folder. **Note: the file `hw3-page1.jpg` must be uploaded into the images folder in your project for this document to compile.** Then, you can include the photo in your `RMarkdown` using:
+
+```{r, out.width = "50%"}
+## make sure the knitr and here packages are loaded (see above)
+#include_graphics(here("images", "hw3-page1.jpg"))
+```
+
+When you use photos, make sure **the problem is clearly labeled and the results are legible**. **I am not responsible for grading solutions I cannot read!** Also, make sure you use the correct file type (.jpg, .jpeg, etc.). Note in the above code chunk (in the .Rmd file), the image size is controlled using the `out.width = "50%"` code chunk option. Change this setting to control the size of your image and to make sure the image is readable.
+
+
+
+
+
+
+
+
+# Problem 1
+
+a) Using the `Orange` dataset built into base `R`, generate a line plot of tree circumference on the y axis and tree age on the x axis. In this plot, generate a line of size vs. age for each individual orange tree with each tree getting a different colored line. Make sure you give clear, descriptive axis labels and titles.
+```{r}
+ggplot(data = Orange, aes(x = age, y = circumference, color = Tree)) +
+  geom_line() +
+  ggtitle("How Different Tree Species Age")+
+  xlab("Tree Age")+
+  ylab("Tree Circumference in mm")+
+  ggeasy::easy_center_title()
+```
+
+
+b) Describe what this figure shows and what it tells you about tree growth. Use **complete sentences.**  
+
+The figure tells us that as a tree grows in age so does its truck circumference. Similarly, the ageing of a tree linearly affects the circumference of a tree.  
+
+
+
+
+
+
+
+
+# Problem 2
+
+If you haven't seen [Jelle's Marble Runs](https://www.youtube.com/channel/UCYJdpnjuSWVOLgGT9fIzL0g), you should. The following data are from the Upload the file `marbles.csv` from Blackboard into the data folder in you RStudio server project. Read the data into `R` using `read_csv()` where you determine the file path using the `here()` library. **Note:**The first line of the data file is 'metadata' and needs to be skipped using `skip = 1`.
+
+```{r, message = FALSE}
+dat <- read_csv(here::here("data", "marbles.csv"), skip = 1)
+```
+
+
+
+a) Make a boxplot of the number of points (`points`) earned by each team (`team_name`) for the season. Make sure you make the x labels readable by adjusting the x axis text label angle and horizontal adjustment. Google how to change the x axis text label in ggplot for help.
+```{r}
+ggplot(dat, aes(x = team_name, y = points, fill = team_name)) +
+  geom_boxplot() +
+  ggtitle("Span of Points Per Team")+
+  ylab("Point IQR")+
+  ggeasy::easy_center_title() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
+        legend.position = "none")
+```
+
+
+
+
+
+
+
+b) Make a scatterplot of the time in seconds (x axis) and the points (y axis). The plot is very strange. What explains why the plot is weird looking? What does this result show us about either the `time_s` or `points` variable?
+```{r}
+ggplot(dat, aes(x = time_s, y = points, color = team_name)) +
+  geom_point()
+```
+The plot looks so strange due to the teams having relatively similar times in which they scored said points; this creates a stacked effect with the data.   
+
+
+
+
+c) For each team (`team_name`), calculate the average number of second (`time_s`) across the races. Be sure to drop any missing values. Based on this output, what are, on average, the fastest three teams?
+
+```{r}
+dat %>%
+  group_by(team_name) %>%
+  drop_na(time_s) %>%
+  summarise(Avg_Time = mean(time_s)) %>%
+  arrange(Avg_Time)
+```
+The fastest three teams on average are the Midnight Wisps, Team Primary, and Limers.  
+
+
+
+
+
+
+
+
+
+
+
+# Problem 3
+
+**Let's make a deal:** Suppose you are on a game show, being asked to choose between three doors. Behind each door, there is either a car or a goat. You choose a door. The host, Monty Hall, picks one of the other doors, which he knows has a goat behind it, and opens it, showing you the goat. (You know, by the rules of the game, that Monty will always reveal a goat.) Monty then asks whether you would like to switch your choice of door to the other remaining door. Assuming you prefer having a car more than having a goat, do you choose to switch or not to switch? Use Bayes' rule or a probability tree to solve the problem. **You can upload the equations in an image and include that as your solution**.
+
+```{r, out.width = "50%"}
+## make sure the knitr and here packages are loaded (see above)
+include_graphics(here("images", "hw3-problem3.jpg"))
+```
+
+
+
+
+# Problem 4
+
+**Area under the curve:**  Area under the curve, Part I. What percent of a standard normal distribution N($\mu$ = 0, $\sigma$ = 1) is found in each region? **Use _R_ functions to calculate the values. Be sure to draw a graph by hand and include in the answers**.
+
+a) P(Z < 1.35)
+
+```{r}
+pnorm(1.35, mean = 0, sd = 1)
+```
+
+b) P(Z > 1.48)
+
+```{r}
+1- pnorm(1.48, mean = 0, sd = 1)
+```
+
+c) P(-0.4 < Z < 1.5)
+
+```{r}
+pnorm(1.5, mean = 0, sd = 1) - pnorm(-0.4, mean = 0, sd = 1)
+```
+
+d) P(|Z| > 2)
+
+```{r}
+1- pnorm(2, mean = 0, sd = 1)
+```
+
+e) P(0.7 $\leq$ Z < 2.1)
+
+```{r}
+pnorm(2.1, mean = 0, sd = 1) - pnorm(0.7, mean = 0, sd = 1)
+```
+
+f) P(|Z| < 1.2)
+
+```{r}
+pnorm(1.2, mean = 0, sd = 1) 
+```
+
+```{r, out.width = "50%"}
+## make sure the knitr and here packages are loaded (see above)
+include_graphics(here("images", "hw3-problem4.1.jpg"))
+include_graphics(here("images", "hw3-problem4.2.jpg"))
+include_graphics(here("images", "hw3-problem4.3.jpg"))
+```
+
+
+
+
+
+
+
+
+# Problem 5
+
+**Triathlon time:** In triathlons, it is common for racers to be placed into age and gender groups. Friends Leo and Mary both completed the Hermosa Beach Triathlon, where Leo competed in the Men, Ages 30 - 34 group while Mary competed in the Women, Ages 25 - 29 group. Leo completed the race in 1:22:28 (4948 seconds), while Mary completed the race in 1:31:53 (5513 seconds). Obviously Leo finished faster, but they are curious about how they did within their respective groups. Can you help them? Here is some information on the performance of their groups:
+
+* The finishing times of the Men, Ages 30 - 34 group has a mean of 4313 seconds with a standard deviation of 583 seconds.
+
+* The finishing times of the Women, Ages 25 - 29 group has a mean of 5261 seconds with a standard deviation of 807 seconds.
+
+* The distributions of finishing times for both groups are approximately Normal. Remember: a better performance corresponds to a faster finish.
+
+a) Write down the short-hand for these two normal distributions. (Attach a photo or if you know \LaTeX you can include the shorthand directly)
+
+
+```{r, out.width = "50%"}
+## make sure the knitr and here packages are loaded (see above)
+include_graphics(here("images", "Problem-5-a.jpg"))
+```
+
+
+
+
+
+
+b) What are the Z-scores for Leo’s and Mary’s finishing times? What do these Z-scores tell you?
+
+```{r, out.width = "50%"}
+## make sure the knitr and here packages are loaded (see above)
+include_graphics(here("images", "Problem-5-b.jpg"))
+```
+
+
+
+
+
+c) Did Leo or Mary rank better in their respective groups? Explain your reasoning.
+
+Looking at the z-scores of Mary and Leo; Mary ranked better than Leo in their respective groups. Because Mary had a lower z-score than Leo.
+
+
+
+
+
+
+d) What percent of the triathletes did Leo finish faster than in his group? (Use `R`)
+
+
+We want to know P(M >= 4948)
+```{r}
+1 - pnorm(4948, mean = 4313, sd = 583)
+```
+So, Leo finished faster than 13.8% triathletes in his group.
+
+
+
+
+e) What percent of the triathletes did Mary finish faster than in her group? (Use `R`)
+
+
+We want to know P(F>= 5513)
+
+```{r}
+1 - pnorm(5513, mean = 5261, sd = 807)
+```
+So, Mary finished faster than 37.7% women in her group.
+
+
+
+
+
+f) If the distributions of finishing times are not nearly normal, would your answers to parts (b) - (e) change? Explain your reasoning.
+
+If the distributions of finishing times are not nearly normal, the z-scores would remain the same but the probabilities would change.
+
+
+
+
+
+
+
+
+
+
+
+# Problem 6
+
+**Triathlon time, Part II:** In the previous problem, We saw two distributions for triathlon times: N($\mu$ = 4313, $\sigma$ = 583) for Men, Ages 30 - 34 and N($\mu$ = 5261, $\sigma$ = 807) for the Women, Ages 25 - 29 group. Times are listed in seconds. Use this information to **compute each of the following in `R`. Make sure to include your drawing.**
+
+a) The cutoff time for the fastest 5% of athletes in the men’s group, i.e. those who took the shortest 5% of time to finish. 
+
+a) The cutoff time for the fastest 5% of athletes in the men’s group:
+
+
+In symbols, we want the value x such that P(M <= x)=0.05
+
+```{r}
+qnorm(0.05, mean = 4313, sd = 583)
+```
+
+
+
+
+
+
+b) The cutoff time for the slowest 10% of athletes in the women’s group.    
+
+
+In symbols, we want the value y such that P(F >= y)=0.10
+```{r}
+qnorm(.9, mean = 5621, sd = 807)
+```
+
+
+
+
+
+
+
+# Problem 7
+
+a) Suppose weights of the checked baggage of airline passengers follow a nearly normal distribution with mean 45 pounds and standard deviation 3.2 pounds. Most airlines charge a fee for baggage that weigh in excess of 50 pounds. Using `R`, determine what percent of airline passengers incur this fee. **Make sure to include your drawing**
+
+```{r}
+1 - pnorm(50, mean = 45, sd = 3.2)
+```
+
+```{r, out.width = "50%"}
+## make sure the knitr and here packages are loaded (see above)
+include_graphics(here("images", "hw3-problem7.jpg"))
+```
+
+
+
+
+
+For parts (b) and (c),use `R` to find the standard deviation of the distribution in the following situations.
+
+b) MENSA is an organization whose members have IQs in the top 2% of the population. IQs are normally distributed with mean 100, and the minimum IQ score required for admission to MENSA is 132.
+
+```{r}
+z = qnorm(1- 0.02)
+sigma = (132 - 100)/z
+print(sigma)
+```
+
+c) Cholesterol levels for women aged 20 to 34 follow an approximately normal distribution with mean 185 milligrams per deciliter (mg/dl). Women with cholesterol levels above 220 mg/dl are considered to have high cholesterol and about 18.5% of women fall into this category. 
+
+```{r}
+z = qnorm(1- 0.185)
+sigma = (220 - 185)/z
+print(sigma)
+```
+
+
+
+
+# Problem 8
+
+**The Oscars:** This question uses the `oscars` dataset in the `openintro` package that records data about best actor and acress winners from 1929 to 2018. Create an `R` chunk and load the `openinro` library and the `oscars` data.
+
+a) Calculate the mean and standard deviation for the age variable `age`.
+
+```{r}
+library(openintro)
+data("oscars")
+str(oscars)
+view(oscars)
+```
+
+a) Calculate the mean and standard deviation for the age variable `age`.
+
+Mean:
+
+```{r}
+mean(oscars$age, trim = 0, na.rm = FALSE)
+```
+SD:
+
+```{r}
+sd(oscars$age,na.rm = FALSE)
+```
+
+
+
+
+b) Using the answer from part (a), does the age variable follow the 65-95-99.7% rule? Recall if the data are normally distributed, 65\% of observations are expected to be with 1 standard deviation of the mean, 95\% of observations are expected to be with 2 standard deviations of the mean, and 99\% of observations are expected to be with 3 standard deviations of the mean.
+
+Ans: Using the answer from part (a), the age variable follows the 65-95-99.7% rule.
+
+
+
+
+
+
+
+
+c) Generate a histogram and QQ-plot of the age variable total `age`. Describe the distribution. 
+
+
+```{r}
+Age <- oscars$age
+hist(Age)
+```
+```{r}
+qqnorm(oscars$age)
+```
+
+
+
+
+
+d) Do you think the `age` variable is normally distributed? Explain your answer. 
+
+```{r, out.width = "50%"}
+include_graphics(here("images", "Problem-8-d.jpg"))
+```
+
+looking at the histogram and qqplot, the 'age' variable seems not to be normally distributed. Comparing the histogram of 'age' variable to a histogram of normally distributed dataset, a deviation can be seen. Same goes for the qqplot; the qqplot of the 'age' variable doesnot follow the dotted line. 
+
+
+
+
+
+
+
+# Problem 9
+
+**Married Americans:** The [2020 American Community Survey](https://www.census.gov/newsroom/press-releases/2020/estimates-families-living-arrangements.html) estimates that 33% of adults ages 15 years and over have never been married married. 
+
+a) We randomly select Americans over 15 years old. What is the probability that the third individual selected is the first one who has never been married? **Answer "by hand" (using the formulas in R is fine), then in `R` using the `p/d/qgeom()` or `p/d/qbinom()` functions**
+
+
+By hand:
+
+```{r}
+include_graphics(here("images","9-a.jpg"))
+```
+
+Using dbinom():
+
+```{r}
+unmarried <- 0.33
+married <- 1 - unmarried
+
+# probability of 2 successful trials out of 2 total trials with a probability of success equaling 67%(first two were married) multiplied by the probability of getting an unmarried
+dbinom(2,2,married)*unmarried
+```
+
+
+
+
+b) What is the probability that three randomly selected Americans over 15 years old are all married? Hint: use the  **Answer "by hand" (using the formulas in R is fine), then in `R` using the `p/d/qgeom()` or `p/d/qbinom()` functions**
+
+
+By hand:
+
+```{r}
+include_graphics(here("images","9-b.jpg"))
+
+```
+
+Using dbinom():
+
+```{r}
+unmarried <- 0.33
+married <- 1 - unmarried
+
+# 3 successful trials out of 3 with a probability of 0.67(married(at some point in their life))
+dbinom(3,3,married)
+```
+
+
+
+
+c) On average, how many Americans over 15 years old would you expect to sample until the last selection is an individual who has never been married? What is the standard deviation? **Answer "by hand" (using the formulas in R is fine)**
+
+```{r}
+include_graphics(here("images","9-c.jpg"))
+
+```
+```{r}
+# The average amount of trials until we encounter an unmarried
+unmarried <- 0.33
+mu <- 1 / unmarried
+mu
+
+# standard deviation
+variance <- (1-unmarried)/(unmarried^2)
+stdv = sqrt(variance)
+stdv
+
+```
+
+
+
+
+
+
+d) If the proportion of married women was actually 30%, how many women would you expect to sample until the last selection is the first married woman? What is the standard deviation?**Answer "by hand" (using the formulas in R is fine)**
+
+
+```{r}
+include_graphics(here("images","9-d.jpg"))
+
+```
+
+```{r}
+# The average amount of trials until we encounter an unmarried
+unmarried <- 0.3
+mu <- 1 / unmarried
+mu
+
+# standard deviation
+variance <- (1-unmarried)/(unmarried^2)
+stdv = sqrt(variance)
+stdv
+
+# standard deviation
+```
+
+
+
+
+
+e) Based on your answers to parts (c) and (d), how does decreasing the probability of an event affect the mean and standard deviation of the wait time until success?
+
+As one would expect decreasing the probability of an event decreases its chances of happening sooner so the mean wait time until success increases as the probability decreases. The standard deviation also increases as the probability of an event decreases.
+
+
+
+
+
+
+
+
+# Problem 10
+
+**Eye color:** A husband and wife both have brown eyes but carry genes that make it possible for their children to have brown eyes (probability 0.75), blue eyes (0.125), or green eyes (0.125).
+
+a) What is the probability the first blue-eyed child they have is their third child? Assume that the eye colors of the children are independent of each other. **Do this first "by hand" (using the formulas in R is fine), then in `R` using the `p/d/qgeom` functions**
+
+()
+```{r}
+include_graphics(here("images","10-a.jpg"))
+```
+```{r}
+blue <- 0.125
+notblue <- 1 - blue
+
+dgeom(2, blue)
+```
+
+
+
+
+
+
+b) On average, how many children would such a pair of parents have before having a blue-eyed child? What is the standard deviation of the number of children they would expect to have until the first blue-eyed child? **Do this ""by hand" (using the formulas in R is fine)**
+
+
+```{r}
+include_graphics(here("images","10-b.jpg"))
+```
+```{r}
+blue <- 0.125
+notblue <- 1 - blue
+
+# average number until blue eyed
+mu <- 1/blue
+mu
+
+# standard deviation
+variance <- (1 - blue)/(blue^2)
+stdv <- sqrt(variance)
+stdv
+```
+
+
+

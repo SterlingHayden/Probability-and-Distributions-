@@ -1,0 +1,335 @@
+---
+title: "Assignment 5"
+author: "Sterling Hayden, Noah Buchanan, Makenzie Woodruff and Nafisa Sadaf"
+output: pdf_document
+urlcolor: blue
+---
+
+```{r setup, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 5, fig.height = 3, fig.align = "center")
+library(here)
+library(openintro)
+library(ggplot2)
+library(knitr)
+library(ggeasy)
+```
+
+
+# Introduction
+
+**Homework must be submitted as a single pdf file using Gradescope.**
+
+# Learning objectives
+
+
+This homework will provide practice in performing hypothesis testing. For any mathematical symbols in the HW, you can attach an image or try writing the hypotheses (in \LaTeX) as shown below
+
+\begin{align*}
+H_0: & \mu = 30 \\
+H_a: & \mu > 30 
+\end{align*}
+
+The objective of this assignment is to work through a couple of hypothesis and confidence interval questions and get familiar with interpreting point and interval estimates. **For all questions, use complete sentences.**
+
+## Problem 1
+
+**Gifted children:** Researchers investigating characteristics of gifted children collected data from schools in a large city on a random sample of thirty-six children who were identified as gifted children soon after they reached the age of four. The histogram you will generate in part (a) shows the distribution of the ages (in months) at which these children first counted to 10 successfully. Also provided are some sample statistics below.
+
+```{r}
+data("gifted")
+summary(gifted)
+```
+
+a) Generate a histogram for the age a child first counted to 10 (`count` variable) using the dataset `gifted` in the `openintro` package.
+```{r}
+ggplot(data = gifted, aes(x=count)) +
+  geom_histogram(bins = 15) +
+  xlab("Age in Months")  +
+  ggtitle("Age in Months At Which Gifted Children Could Count To 10") +
+  ggeasy::easy_center_title()
+  
+```
+a) Are conditions for inference satisfied?
+Yes, n is greater than 30, the sample is random, and the distribution approximately normal.    
+
+b) Suppose you read online that children first count to 10 successfully when they are 32 months old, on average. Perform a hypothesis test to evaluate if these data provide convincing evidence that the average age at which gifted children first count to 10 successfully is less than the general average of 32 months. Use a significance level of 0.10.
+```{r}
+t.test(gifted$count, alternative = 'less', mu = 32, conf.level = .9)
+```
+
+c) Interpret the p-value in context of the hypothesis test and the data.
+We reject the null hypothesis since our p-vale of 0.03902 is less than our alpha of 0.10. There is sufficient evidence to support the claim that the average age at which gifted children first count to 10 successfully is less than the general average of 32 months.  
+
+d) Calculate a 90% confidence interval for the average age at which gifted children first count to 10 successfully.
+
+We are 90% confident that the true mean age of gifted children lies between (29.47939, 31.90950).  
+
+e) Do your results from the hypothesis test and the confidence interval agree? Explain.
+The results from the hypothesis test and the confidence interval agree. The Hypothesis test say we have evidence to support the claim that the average age at which gifted children first count to 10 successfully is less than the general average of 32 months. The confidence interval says that we are 90% that the true mean age of gifted children lies between (29.47939, 31.90950). They both tell us the same thing, that gifted children on average count to 10 significantly sooner than non gifted children.  
+```{r}
+
+```
+
+## Problem 2
+
+**Identify the critical $t$:** An independent random sample is selected from an approximately normal population with unknown standard deviation. Find the degrees of freedom and the critical $t$-value ($t_{crit}$) for the given sample size and confidence level.
+
+a) n=6, CL=90% 
+```{r}
+Lcrit <- qt(.1/2, 5, lower.tail=T)
+Rcrit <- qt(.1/2, 5, lower.tail=F)
+print("df = 5")
+c(Lcrit, Rcrit)
+```
+
+b) n=21, CL=98% 
+```{r}
+Lcrit <- qt(.02/2, 20, lower.tail=T)
+Rcrit <- qt(.02/2, 20, lower.tail=F)
+lcrit <- qt(.99, 20)
+print("df = 20")
+c(Lcrit, Rcrit)
+print(lcrit)
+```
+
+c) n=29, CL=95% 
+```{r}
+Lcrit <- qt(.05/2, 28, lower.tail=T)
+Rcrit <- qt(.05/2, 28, lower.tail=F)
+print("df = 28")
+c(Lcrit, Rcrit)
+```
+
+d) n=12,CL=99%
+```{r}
+Lcrit <- qt(.01/2, 11, lower.tail=T)
+Rcrit <- qt(.01/2, 11, lower.tail=F)
+print("df = 11")
+c(Lcrit, Rcrit)
+```
+
+
+## Problem 3
+
+**Find the p-value:** An independent random sample is selected from an approximately normal population with an unknown standard deviation. Find the p-value for the given set of hypotheses and T test statistic. Also determine if the null hypothesis would be rejected at $\alpha$ = 0.05. Use `R` to evaluate the probability under the $t$-distribution.
+
+a) $H_a: \mu > \mu_0, n = 11, t_{test} = 1.91$ 
+
+p-value: `r 1 - pt(1.91, df = 11-1)`. P-value $< \alpha$, therefore we reject $H_o$.
+
+b) $H_a: \mu < \mu_0, n = 17, t_{test} = -3.45$ 
+
+P-value: `r pt(-3.45, df = 17-1)`. P-value $< \alpha$, therefore we reject $H_o$.
+
+c) $H_a: \mu \neq \mu_0, n = 7, t_{test} = 0.83$ 
+
+P-value: `r 2 * pt(0.83, df = 7-1)`. P-value $> \alpha$, therefore we fail to reject $H_o$.
+
+d) $H_a: \mu > \mu_0, n = 28, t_{test} = 2.13$ 
+
+P-value: `r 1 - pt(2.13, 28)`. P-value $< \alpha$, therefore we reject $H_o$.
+
+
+
+
+## Problem 4
+
+**Global warming:**. Is there strong evidence of global warming? Let’s consider a small scale example, comparing how temperatures have changed in the US from 1968 to 2008. The daily high temperature reading on January 1 was collected in 1968 and 2008 for 51 randomly selected locations in the continental US. Then the difference between the two readings (temperature in 2008 - temperature in 1968) was calculated for each of the 51 different locations. The average of these 51 values was 1.1 degrees with a standard deviation of 4.9 degrees. We are interested in determining whether these data provide strong evidence of temperature warming in the continental US at the $\alpha=0.1$ level.
+
+a) Is there a relationship between the observations collected in 1968 and 2008? Or are the observations in the two groups independent? Explain.
+
+The measurements are independent. There is no effect from the measurements made in either 1968 or 2008 on each other.
+
+b) Write hypotheses for this research in symbols and in words. 
+
+$H_o : \mu_{2008} - \mu_{1968} = 0\\H_a : \mu_{2008} - \mu_{1968} > 0$
+
+We want to test whether the difference in means is strong evidence of the temperatures rising from 1968 to 2008. Our null hypothesis being that there is no difference. Our alternative hypothesis being that the temperatures have risen since 1968.
+
+c) Check the conditions required to complete this test.
+
+The data of both means meet the requirements of $n > 30$ and the observations are independent so a paired test is not necessary.
+
+d) Calculate the test statistic and find the p-value.
+
+P-value : `r 1-pnorm( 1.1 / ( 4.9/sqrt(51) ) )`.
+
+e) What do you conclude? Interpret your conclusion in context.
+
+Since the P-value $< \alpha$ we can reject the null hypothesis and conclude that the temperature rising by 1.1 degrees from 1968 to 2008 is significant.
+
+f) What type of error might we have made? Explain in context what the error means.
+
+It is possible we have made a Type I error. Meaning we rejected the null hypothesis when it was true. In the context of this problem this error means that the temperature difference is not significant but we concluded that it is so.
+
+g) Based on the results of this hypothesis test, would you expect a 90\% confidence interval for the average difference between the temperature measurements from 1968 and 2008 to include 0? Explain your reasoning.
+
+No I would not expect the average difference between the temperature measurements to include 0 since we rejected at the $\alpha = 0.1$ level.
+
+h) Calculate a 90% confidence interval for the average difference between the temperature measurements between 1968 and 2008.
+
+Confidence Interval: `r c(1.1 - qnorm(0.9) * 4.9/sqrt(51), 1.1 + qnorm(0.9) * 4.9/sqrt(51))`.
+
+i) Interpret this interval in context.
+
+This confidence interval provides a range that we are 90% sure that $\mu_{2008}-\mu_{1968}$ falls inside of.
+
+j) Does the confidence interval provide convincing evidence that the temperature was higher in 2008 than in 1968 in the continental US? Explain.
+
+Yes the confidence interval provides convincing evidence that the temperature was higher in 2008. The difference of 0, meaning $H_o$, is not contained within the CI, meaning our earlier decision of rejecting $H_o$ was correct.
+
+
+
+## Problem 5
+
+**Friday the 13th:** In the early 1990’s, researchers in the UK collected data on traffic flow, number of shoppers, and traffic accident related emergency room admissions on Friday the 13th and the previous Friday, Friday the 6th. Use the `friday` dataset in the `openintro` package to test if there is a difference in traffic at a set of fixed intersections (i.e. subset the data for `type` is `traffic`). Use $\alpha = 0.05$.
+
+```{r}
+data("friday")
+```
+
+a) Are there any underlying structures in these data that should be considered in an analysis? Explain.
+Ans: 
+```{r}
+mean(friday$thirteenth)
+sd(friday$thirteenth)
+```
+```{r}
+mean(friday$sixth)
+sd(friday$sixth)
+```
+The mean and standard deviation value of the values collected on friday the 6th and friday the 13th are different. Also the sample size is equal. For the friday dataset, paired t-test analysis is appropriate.
+
+b) What are the hypotheses for evaluating whether the number of people out on Friday the 6th is different than the number out on Friday the 13th? 
+Ans: The test hypothesis are given below:
+Null hypothesis:
+H_o:u_d = 0
+there is no significance difference between friday the 6th and friday the 13th.
+Alternative hypothesis:
+H_o:u_d =/ 0
+There is significance difference between friday the 6th and friday the 13th.
+c) Ans: we have to compute t_crit
+since the test is two-tailed and the level of significance is 0.01
+the degree of freedom, df = n-1=10-1=9
+Applying formula, we get t_crit = 2.261
+rejection value for t_crit:
+if t_data>=t_crit (2.261) , then reject the null hypothesis
+if t_data<= t_crit (=2.261), then reject the null hypothesis
+Rejection rule for p-value method:
+if p value <= significance value, then reject the null hypothesis
+d) Calculate the test statistic and the p-value.
+Ans: t_data = 4.93 
+the corresponding p-value is 0.01
+
+e) What is the conclusion of the hypothesis test?
+Ans:
+the critical value is 2.261 and the value of t_data is 4.93
+the value of t_data is greater than t_crit
+thus, it can be concluded that there is a evidence to reject the null hypothesis.
+So, there is significance difference between friday the 6th and friday the 13th.
+f) Interpret the p-value in this context.
+Ans: significance level = .05
+p-value is .001 which is lesser than the significance value
+therefore, the rejection rule implies the rejection of null hypothesis
+
+g) What type of error might have been made in the conclusion of your test? Explain.
+Ans: Type 1 error: false positives and type 2 error: false negatives
+
+## Problem 6
+
+**Diamonds:** Use the dataset `diamonds` which records the qualities of many diamonds to test if there is a directional difference in `price` between diamonds with a `cut` of `Premium` vs. a `cut` of `Very Good` (i.e. subset the data for `cut` is `Premium` and `Very Good`). Use $\alpha = 0.01$
+
+```{r}
+data("diamonds")
+
+diamonds_premium <- subset(diamonds, cut == "Premium")
+diamonds_verygood <- subset(diamonds, cut == "Very Good")
+
+xbar1 <- mean(diamonds_premium$price)
+xbar2 <- mean(diamonds_verygood$price)
+```
+
+a) What are the hypotheses for evaluating whether the price of diamonds rated Premium is higher than the price of diamonds rated Very Good?
+
+ Ho= Price of Premium cut <= Price of Very Good cut 
+ Ha= Price of Premium cut > price of very good cut
+
+b) Check conditions to carry out the hypothesis test from part (a). (Hint: qqplot)
+
+```{r}
+ggplot(data = diamonds_premium, aes(sample = price)) + 
+  geom_qq() +
+  geom_qq_line(color = "red")
+
+ggplot(data = diamonds_verygood, aes(sample = price)) + 
+  geom_qq() +
+  geom_qq_line(color = "red")
+```
+
+c) Calculate the test statistic and the p-value.
+
+```{r}
+t.test(diamonds_premium$price, diamonds_verygood$price, alternative = "greater")
+```
+d) What is the conclusion of the hypothesis test?
+
+Since the p-value is less than 0.01 we reject the null hypothesis.  
+
+e) Interpret the p-value in this context.
+
+The premium cut diamond is equal in price to the Very good cut or it exceeds the price of a very good cut diamond. 
+
+f) What type of error might have been made in the conclusion of your test? Explain.
+
+A type on error might have been made. This could result in overpaying for a diamond. 
+
+g) If you found a significant difference in price, does this result have a practical influence on what cut of diamond you would buy (i.e. is a Very Good diamond a better buy than a Premium diamond)?
+
+```{r}
+xbar1-xbar2
+(xbar1 - xbar2) / xbar1
+```
+The Price difference is actually only 13%. The significance in price difference could be due to the large sample size. Therefore the results of the t-test would not have that large of an influence on what cut of diamond to purchase.
+
+## Problem 7
+
+**Play the piano:** Georgianna claims that in a small city renowned for its music school, the average child takes at least 5 years of piano lessons. We have a random sample of 20 children from the city, with a mean of 4.6 years of piano lessons and a standard deviation of 2.2 years.
+
+a) Evaluate Georgianna’s claim using a hypothesis test. Make sure to show all 5 steps and discuss any assumptions that you are making. 
+Ans: Hypothesis test: 
+
+H0:u=5
+Ha:u<5
+Null hypothesis H0>=5 is also correct
+This is a lowered tail test
+x = 4.6
+s = 2.2
+n = 20
+Significance level, a = 0.05
+degrees of freedom, df = n-1 = 19
+t_observed= (x-u)/(s/n^1/2) = -0.813
+here, p value is between 0.20 and 0.25
+t_critical= -t_a.df = -1.729
+So, we fail to reject the null hypothesis. Hence, at 5% significance level, there is insufficinet evidence to conclude that u is less than 5.
+
+b) Construct a 95% confidence interval for the number of years students in this city take piano lessons, and interpret it in context of the data.
+Ans: sample mean, x =4.6
+standard deviation, s =2.2
+sample size, n = 20
+significance level,  a = 0.05
+degrees of freedom for t distribution, df =n-1 = 19
+criical value, t_a/2,df = 2.093
+margin of error, E = 2.093 * sx/n^1/2 = 1.02962
+limits of 95% confidence interval are given by,
+lower limit  = x-E = 4.6 - 1.02962 = 3.570
+upper limit - x+E = 4.6 + 1.0962 =5.630
+95% confidence interval is (3.570,5.630)
+interpretations:
+1. We are 95% sure the interval contains the true population mean
+If a large number of samples is collected, and a confidence interval is created for each sample, 95% of these intervals will contain true mean.
+c) Do your results from the hypothesis test and the confidence interval agree? Explain your reasoning.
+Ans: Yes, the results agree because the confidence interval contains 5 years.
+
+
+
+

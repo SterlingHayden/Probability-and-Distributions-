@@ -1,0 +1,408 @@
+---
+title: "Assignment 4"
+author: "Sterling Hayden, Noah Buchanan, Nafisa Sadaf, Makenzie Woodruff"
+output: pdf_document
+urlcolor: blue
+---
+
+```{r setup, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 5, fig.height = 3, fig.align = "center")
+library(here)
+library(openintro)
+library(tidyverse)
+library(ggeasy)
+```
+
+
+# Introduction
+
+**Homework must be submitted as a single pdf file using Gradescope.**
+
+The objective of this assignment is to work through a couple probability questions, get familiar with interpreting point and interval estimates, and gain experience writing `R` function and simulations for the sampling distribution of the mean. **For all questions, use complete sentences.**
+
+## Required `R` code problems
+
+`R` code is **required** on problems 3a and 3b, 4, and 8. `R` code or included handwritten images can be included as an option on other problems.
+
+
+
+
+## Problem 1
+
+**Covid-19 vaccine:** In a [not so recent survey](https://news.gallup.com/poll/317018/one-three-americans-not-covid-vaccine.aspx), 65% of Americans said that they would get the Covid-19 vaccine following approval from the FDA.
+
+a) Is the use of the binomial distribution appropriate for calculating the probability that exactly 74 out of 100 randomly sampled American adults get the covid-19 vaccine once it is approved?  
+Yes, the binomial distribution is appropriate for calculating the probability that exactly 74 out of 100 randomly sampled American adults get the covid-19 vaccine.  
+
+b) Calculate the probability that exactly 74 out of 100 randomly sampled American adults get the covid-19 vaccine once it is approved.
+```{r}
+#p(74 successes)
+pbinom(74, 100, 0.65) - pbinom(73, 100, 0.65)
+```
+
+c) What is the probability that exactly 49 out of a new sample of 100 American adults do not get the covid-19 vaccine once it is approved?
+```{r}
+#p(49 successes)
+pbinom(49, 100, 0.65) - pbinom(48, 100, 0.65)
+```
+d) What is the probability that at least 4 out of 10 randomly sampled do not get the covid-19 vaccine once it is approved?
+```{r}
+#p(4 or more successes)
+pbinom(3, 10, 0.65, lower.tail = FALSE)
+```
+e) What is the probability that at most 4 out of 10 randomly sampled do not get the covid-19 vaccine once it is approved?
+```{r}
+#p(4 or less successes)
+pbinom(4, 10, 0.65)
+```
+
+
+
+
+## Problem 2
+
+**Eye color:** Last homework, we introduced a husband and wife with brown eyes who have 0.75 probability of having children with brown eyes, 0.125 probability of having children with blue eyes, and 0.125 probability of having children with green eyes.
+
+a) What is the probability that their first child will not have green eyes and the second will?
+
+
+```{r}
+green = 0.125
+not_green = 1 - green
+
+not_green * green
+```
+
+b) What is the probability that exactly one of their two children will have green eyes?
+
+```{r}
+green = 0.125
+
+dbinom(1,2,green)
+```
+
+c) If they have five children, what is the probability that exactly two will have green eyes?
+
+```{r}
+green = 0.125
+
+dbinom(2,5,green)
+```
+
+d) If they have five children, what is the probability that at least one will have green eyes?
+
+```{r}
+green = 0.125
+
+1 - dbinom(0,5,green)
+```
+
+e) What is the probability that the first green eyed child will be the 3rd child?
+
+```{r}
+dbinom(0,2,green) * green
+```
+
+f) Would it be considered unusual if only 2 out of their 6 children had brown eyes?
+
+```{r}
+brown = 0.75
+
+dbinom(2,6,brown) + dbinom(1,6,brown) + dbinom(0,6,brown)
+```
+Considering that the probability that 2 or less of the 6 children have brown eyes is 0.0376 we can confidently say that yes it would be unusual if only 2 out of their 6 children had brown eyes.
+
+## Problem 3
+
+**College Credit:** A college counselor is interested in estimating how many credits a student typically enrolls in each semester. The counselor decides to randomly sample 100 students by using the registrar’s database of students. Load the `credits` data from the `openintro` library.
+
+```{r}
+data('credits')
+```
+
+a) Using the `credits` data from the `openintro` library, create a histogram of the number of credits taken by the 100 randomly selected students.
+
+```{r}
+ggplot(credits, aes(credits)) + geom_histogram(bins = 15)
+```
+
+b) Using `R`, create a 5 number summary of the number of credits taken. (Bonus points if the code output is presented using a `kable()` table from the `knitr` package).
+
+
+```{r}
+sorted <- sort(credits$credits)
+lowerhalf <- sorted[1:round(length(sorted)/2)]
+upperhalf <- sorted[round((length(sorted)/2)+1):length(sorted)]
+
+min <- sorted[1]
+Q1 <- median(lowerhalf)
+Q2 <- median(sorted)
+Q3 <- median(upperhalf)
+max <- sorted[length(sorted)]
+
+fivenum <- data.frame(min,Q1,Q2,Q3,max)
+knitr::kable(fivenum)
+```
+
+c) What is the point estimate for the average number of credits taken per semester by students at this college? What about the median?
+
+```{r}
+print(paste("Point Estimate Average: ", mean(credits$credits)))
+print(paste("Median: ", Q2))
+```
+
+d) What is the point estimate for the standard deviation of the number of credits taken per semester by students at this college? What about the IQR?
+
+```{r}
+print(paste("Point Estimate Standard Deviation: ", sd(credits$credits)))
+print(paste("IQR: ", Q3-Q1))
+```
+
+e) Is a load of 16 credits unusually high for this college? What about 18 credits? Explain your reasoning. Hint: Observations farther than two standard deviations from the mean are usually considered to be unusual.
+
+Considering that we have a standard deviation of 1.9 credits and a mean of 13.65, 16 credits is not unusually high as it is less than two standard deviations from the mean. Now in the case of 18 credits this would be considered unusually high as it is farther than two standard deviations from the mean.
+
+f) The college counselor takes another random sample of 100 students and this time finds a sample mean of 14.02 units. Should she be surprised that this sample statistic is slightly different than the one from the original sample? Explain your reasoning.
+
+No she should not be surprised that this sample is slightly different. The difference in sample means is roughly a fourth of a standard deviation of the first sample statistics mean so the difference is not alarming.
+
+g) The sample means given above are point estimates for the mean number of credits taken by all students at that college. What measures do we use to quantify the variability of this estimate (Hint: recall that $SE = \frac{\sigma}{\sqrt{n}}$)? Compute this quantity using the data from the original sample.
+
+We use Standard Error (SE) to quantify variability.
+
+```{r}
+print(paste("Standard Error: ", sd(credits$credits)/sqrt(100)))
+```
+
+## Problem 4
+
+**Hen Eggs:** The distribution of the number of eggs laid by a certain species of hen during their breeding period has a mean of 35 eggs with a standard deviation of 18.2. Suppose a group of researchers randomly samples 45 hens of this species, counts the number of eggs laid during their breeding period, and records the sample mean. They repeat this 1,000 times, and build a distribution of sample means.
+
+a) What is this distribution called?
+This distribution would be called a sampling distribution.  
+
+b) Would you expect the shape of this distribution to be symmetric, right skewed, or left skewed? Explain your reasoning.  
+I would expect the distribution to be symmetric given that n is so large(CLT applies when n is large).  
+
+c) Calculate the variability of this distribution and state the appropriate term used to refer to this value.  
+```{r}
+SE <- 18.2 / sqrt(45)
+print(paste("The standard error is",SE))
+```
+
+d) Suppose the researchers’ budget is reduced and they are only able to collect random samples of 10 hens. The sample mean of the number of eggs is recorded, and we repeat this 1,000 times, and build a new distribution of sample means. How will the variability of this new distribution compare to the variability of the original distribution?
+The new distributions variability will become higher as there is now a smaller sample size.   
+
+e) **Download the function `layeggs.R` from the assignments website and put the file in the `R` folder of your project.** Using this function, generate 1000 random samples of size $n = 35$ and plot a histogram of the mean number of eggs. Do the same for 1000 random samples of size $n=10$ and compare the histograms.
+
+```{r}
+## load the layeggs function
+## This function takes a sample of the number of eggs laid by $n$ hens 
+## and computes the mean number of eggs laid.
+source(here("R", "layeggs.R"))
+# For example, the following returns the mean number of eggs for 10 hens
+layeggs(10)
+```
+```{r}
+gen_eggs = rep(0,1000)
+for (i in 1:1000) {
+  gen_eggs[i] = layeggs(10)
+}
+gen_eggs
+ggplot(data = NULL, aes(gen_eggs)) +
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept = mean(gen_eggs), color="red")
+```
+
+
+
+
+## Problem 5
+
+**Mental health:** The 2020 General Social Survey asked the question: “For how many days during the past 30 days was your mental health, which includes stress, depression, and problems with emotions, not good?” Based on responses from 1,042 US residents, the survey reported a 90% confidence interval of 3.10 to 4.45 days in 20202.
+
+a) Interpret this interval in context of the data.
+
+This interval tells gives a range that number of days x will fall into. 90% of people will have not good days between 3.10 and 4.45
+
+b) What does "90% confident" mean? Explain in the context of the application.
+
+Being 90% confident means there is only a 10% chance that a person has had less than 3.10 bad days and more than 4.45 bad days in the past 30 days. It tells you how precise the data is. 
+
+c) Suppose the researchers think a 95% confidence level would be more appropriate for this interval. Will this new interval be smaller or larger than the 90% confidence interval? What about a 99% interval? will this be the widest, smallest, or in between the other intervals?
+
+Increasing to a 95% confidence level would increase the interval, making it wider than 90%. Increasing to a 99% confidence level would increase it more. 99% confidence level is the widest of all three. 
+
+d) If a new survey were to be done with 500 Americans, would the standard error of the estimate be larger, smaller, or about the same (on average). Assume the true population standard deviation has remained constant since 2020.
+
+The standard error would be smaller because it is inversely proportional to sample size. 
+
+
+
+
+## Problem 6
+
+**Waiting at an ER:** A hospital administrator hoping to improve wait times decides to estimate the average emergency room waiting time at her hospital. She collects a simple random sample of 64 patients and determines the time (in minutes) between when they checked in to the ER until they were first seen by a doctor. A 95% confidence interval based on this sample is (128 minutes, 147 minutes), which is based on the normal model for the mean. Determine whether the following statements are true or false, and explain your reasoning.
+
+a) This confidence interval is not valid since we do not know if the population distribution of the ER wait times is nearly Normal.
+
+False. Since the data is not skewed the sample mean will be close to normal. 
+
+b) We are 95% confident that the average waiting time of these 64 emergency room patients is between 128 and 147 minutes.
+
+False. The inference is made on the population parameter instead of the point estimate. 
+
+c) We are 95% confident that the average waiting time of all patients at this hospital’s emergency room is between 128 and 147 minutes.
+
+True 
+
+d) 95% of random samples have a sample mean between 128 and 147 minutes.
+
+False. The confidence interval is not the sample mean 
+
+e) A 99% confidence interval would be narrower than the 95% confidence interval since we need to be more sure of our estimate.
+
+False. The more confident the wider the interval. Therefore a interval of 99% is wider than 95%
+
+f) The margin of error is 9.5 and the sample mean is 137.5.
+
+True 
+
+g) In order to decrease the margin of error of a 95% confidence interval to half of what it is now, we would need to double the sample size.
+
+False. Since the standard error is found by taking the square root of the sample size we would need to sample 4 times the original amount. 
+
+
+
+## Problem 7
+
+**Thanksgiving spending:**. The 2009 holiday retail season, which kicked off on November 27, 2009 (the day after Thanksgiving), had been marked by somewhat lower self-reported consumer spending than was seen during the comparable period in 2008. To get an estimate of consumer spending, 436 randomly sampled American adults were surveyed and daily consumer spending for the six-day period after Thanksgiving, spanning the Black Friday weekend and Cyber Monday, was recorded. For parts a-c, use `R` code to perform calculations and for d-g, determine whether the following statements are true or false, and **explain your reasoning**. For all questions that require answers, use complete sentences.
+
+```{r, message = FALSE, echo=FALSE}
+data("thanksgiving_spend")
+```
+
+
+a) Make a histogram of the data. Add a vertical line in red highlighting the mean of the sample. (Hint: Google "add vertical line to histogram ggplot R").
+```{r}
+ggplot(data = thanksgiving_spend, aes(x = spending))+
+geom_histogram(bandwidth = 10)+
+geom_vline(aes(xintercept = mean(spending), color = "blue"), show.legend = F)
+```
+
+b) Report the mean, standard deviation, and IQR for the sample of American consumers
+
+```{r}
+mean(thanksgiving_spend$spending)
+sd(thanksgiving_spend$spending)
+IQR(thanksgiving_spend$spending, na.rm = TRUE)
+```
+c) Construct a 95% confidence interval for the true average daily spending by Americans over the 6 day period after Thanksgiving using `R`.
+```{r}
+#standard error
+SE <- sd(thanksgiving_spend$spending) / sqrt(nrow(thanksgiving_spend))
+SE
+```
+
+```{r}
+#margin of error
+za <- qnorm(.975)
+za
+```
+
+```{r}
+me <- za*SE
+me
+```
+
+```{r}
+#construct the confidence interval
+lower_ci <- mean(thanksgiving_spend$spending) - me
+lower_ci
+```
+```{r}
+upper_ci <- mean(thanksgiving_spend$spending) + me
+upper_ci
+```
+d) We are 95% confident that the average spending of these 436 American adults is between $80.3 and $89.1.
+
+Answer: True. The lower part of the generated confidence interval rounds to 80.3 and the upper part rounds to 89.1.
+
+e) This confidence interval is not valid since the distribution of spending in the sample is right skewed.
+
+Answer: True. The margin of error estimate relies on a critical point that implies normality.
+
+f) 95% of random samples have a sample mean between $80.3 and $89.1.
+
+Answer: False. Samples of different size may have different confidence intervals. Yet, it is true that the mean value of 95% of the random samples of size 436 lie within the confidence interval. 
+
+g) We are 95% confident that the average spending of all American adults is between $80.3 and $89.1.
+
+Answer: True. According to the definition of confidence interval, the confidence interval covers the parameter value with 95% probabilty.
+
+h) A 90% confidence interval would be narrower than the 95% confidence interval since we don’t need to be as sure about our estimate.
+
+Ans: True. Less confidence indicates a lower probability of containing the population parameter , which means the level of uncertainity buit into the range can be decreased.
+
+i) In order to decrease the margin of error of a 95% confidence interval to a third of what it is now, we would need to use a sample 3 times larger.
+
+Answer: Flase. A sample size 3 times bigger is not enough. We would need a sample size 9 times bigger.
+
+j) The margin of error is 4.4.
+
+Answer: According to the formula, it is true.
+
+
+
+## Problem 8
+
+**Spam Email:** Using the `email` dataset from the `openintro` package, you are going to write a function that calculates the sampling distribution for the mean of the number of line breaks in the email using the variable `line_breaks`. We will treat the `email` data as a complete census, so you will be subsampling from the population using the `subsample.R` function. **On the Assignments page of the website, download the file `subsample.R` and move the file into a folder in your project named `R`.** The function will take the values of the `data.frame`, the number of samples n, and the number of replicates of the experiment $B$. The function will return the sample mean $\bar{x}$ for each of the $B$ samples. For example, a single sample from the `email` data.frame is
+
+```{r}
+library(openintro)
+data("email")
+source(here("R", "subsample.R"))
+
+## sample size
+n <- 10
+## Take a sample of n players at random
+dat <- subsample(email, n)
+glimpse(dat)
+```
+
+a) `Write a function that returns the sample mean for $B$ samples of size $n$. Hint: write a for loop first then put the loop in a function. The function inputs should be a `data.frame` (e.g. `email`), the number of replicates `B`, and the sample size `n`.
+```{r}
+sample <- subsample(email, 50)
+str(sample)
+sample_mean_me <- function(b,n) {xbar <- rep(0,b)
+for (i in 1:b)
+{sample <- subsample(email,n)
+  xbar[i] <- mean(as.numeric(sample$line_breaks))}
+return(as.data.frame(xbar))
+str(sample_mean_me(21,3000))}
+```
+
+
+b) Using your function, create three datasets with $B=10000$ replicates of size $n = 10$, $n=50$, and $n=200$. For each of the three sample sizes, create a histogram of the sample means.
+```{r}
+ ##n=10
+ n10 <- sample_mean_me(10000,10)
+ggplot(n10, aes(xbar))+
+geom_histogram()+xlab("line_breaks")
+```
+```{r}
+##n=50
+n50 <- sample_mean_me(10000,50)
+ggplot(n50, aes(xbar))+
+geom_histogram()+xlab("line_breaks")
+```
+```{r}
+##n=200
+n200 <- sample_mean_me(10000,200)
+ggplot(n200, aes(xbar))+
+  geom_histogram()+xlab("line_breaks")
+```
+
+c) Describe what you see. What are the shapes of the histograms? Are there any trends in the shape as $n$ increases?
+
+The histograms are unimodal. We can see the skewness to the left decreases as the $n$ increases.

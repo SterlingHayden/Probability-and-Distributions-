@@ -1,0 +1,383 @@
+---
+title: "Assignment 6"
+author: "Chelse' Perry, Sterling Hayden, Tawhidul Munin, Samuel Donaldson"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+urlcolor: blue
+---
+
+```{r setup, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 5, fig.height = 3, fig.align = "center")
+library(here)
+library(openintro)
+library(ggplot2)
+library(knitr)
+```
+
+
+# Introduction
+
+Submit the compiled HW to gradescope.
+
+
+# Learning objectives
+
+This homework will provide practice in performing hypothesis testing for ANOVAs and proportions. For any mathematical symbols in the HW, you can attach an image or try writing the hypotheses (in \LaTeX) as shown below
+
+\begin{align*}
+H_0: & p = 0.30 \\
+H_a: & p > 0.30 
+\end{align*}
+
+**For any hypothesis test, make sure you specify the results from all 5 steps!**
+
+
+
+## Problem 1
+
+**Chicken diet and weight:** Chicken farming is a multi-billion dollar industry, and any methods that increase the growth rate of young chicks can reduce consumer costs while increasing company profits, possibly by millions of dollars. An experiment was conducted to measure and compare the effectiveness of various feed supplements on the growth rate of chickens. Newly hatched chicks were randomly allocated into six groups, and each group was given a different feed supplement. Below are some summary statistics from this data set along with box plots showing the distribution of weights by feed type. Use the dataset `chickwts` in the `openintro` package to compare chick `weight` to `feed`.
+
+```{r}
+data("chickwts")
+```
+
+a) Generate a boxplot for the weights of chicks by feed. (Google "boxplot in ggplot2" for help)
+
+```{r}
+ggplot(chickwts, aes(x = feed, y = weight)) +
+geom_boxplot()
+```
+
+
+b) Describe the distributions of weights of chickens that were fed different feed.
+
+By looking at the box plots we can say that the distributions of weights of chickens that
+were fed different feed are different from each other with respect to mean, variability,
+and symmetry. they all seem to have different mean; some distributions are more spread
+than others, some are left skewed and some are right skewed.**
+
+
+c) Do these data provide strong evidence that the average weights of chickens that were fed different feed are different? Use a 5% significance level.
+
+```{r}
+wt_test <- aov(weight ~ feed, data = chickwts)
+summary(wt_test)
+```
+ #Result: Because P-value is less than significance level 0.05, we can reject the null hypothesis. And we
+can conclude that, these data provide strong evidence that average weight of chickens for at least one
+type of feed are different others.#
+
+c) What type of error might we have committed? Explain.
+
+**Type-1 ERROR. Since we reject the null hypothesis, any error would imply false rejection
+or rejecting a true hypothesis which is a type-1 error.**
+
+d) Would your conclusion change if we used alpha = 0.01?
+
+**The P-value is still less than 0.01, so our conclusion would not be change if we used alpha =
+0.01.**
+
+e) Using the original value of alpha = 0.05, which feed types have significantly different average weight gain?
+
+** There are 6 groups of feed, so we will conduct 6 * (6 - 1) / 2 = 15 pairwise t-test. So, significance level
+for those pairwise test would be alpha∗ = alpha/15 = 0.05 / 15 = 0.003333333.**
+
+```{r}
+pairwise.t.test(chickwts$weight, chickwts$feed, p.adjust.method = "bonf")
+```
+** Now, by comparing the p-values with alpha∗, we can say that base on our data, * average weight
+gain for feed type horsebean is different from casein, meatmeal, sunflower and * average weight
+gain for feed type linseed is different from casein, sunflower.**
+
+## Problem 2
+
+**MLB analytics:** Use the `mlbbat10` dataset in the `openintro` package to answer the following. The hitting statistics for the 2010 MLB year are in the dataset `mlbbat10`. 
+
+```{r}
+data("mlbbat10")
+```
+
+
+a) Construct a plot that visually explores whether the average batting average `bat_avg` varies by player position `position`.
+
+```{r}
+ggplot(mlbbat10, aes(x = position, y = bat_avg)) +
+geom_boxplot()
+```
+
+
+b) Describe how the batting average varies by position.
+
+** The batting average for 1B, 2B, 3B, OF, SS, DH, and C look to be around a similar value.
+However, the batting average look to be different for P and “-”**
+
+c) Do these data provide strong evidence that the average batting average is different among players of different positions? Use a 5% significance level. 
+
+** Hypothesis test * Null hypothesis: The average batting average is same among players of all positions. *
+Alternative hypothesis: the average batting average is different among players for at least one position.** 
+
+```{r}
+ba_test <- aov(bat_avg ~ position, data = mlbbat10)
+summary(ba_test)
+```
+**Result: Because P-value is less than significance level 0.05, we can reject the null hypothesis. And
+we can conclude that, these data provide strong evidence that the average batting average is different
+among players of at least one positions.**
+
+d) If you found a significant result in part (c), which positions have different batting averages?
+
+** There are 9 different position, so we will conduct 9 * (9 - 1) / 2 = 36 pairwise t-test. So, significance
+level for those pairwise test would be α∗ = α/15 = 0.05 / 36 = 0.001388889**
+
+```{r}
+pairwise.t.test(mlbbat10$bat_avg, mlbbat10$position, p.adjust.method = "bonf")
+```
+**Now,by comparing the p-values with α∗, we can say that base on our data, batting average for
+the position P is different from batting average of 1B, 2B, 3B, OF, SS, DH, C at 5% level of
+significance.**
+
+## Problem 3
+
+ 
+
+**Email outreach efforts:** A medical research group is recruiting people to complete short surveys about their medical history. For example, one survey asks for information on a person’s family history in regards to cancer. Another survey asks about what topics were discussed during the person’s last visit to a hospital. So far, as people sign up, they complete an average of just 4 surveys, and the standard deviation of the number of surveys is about 2.2. The research group wants to try a new interface that they think will encourage new enrollees to complete more surveys, where they will randomize each enrollee to either get the new interface or the current interface. How many new enrollees do they need for each interface to detect an effect size of 0.5 surveys per enrollee, if the desired power level is 80%? Use a significance level of 0.05.
+
+ 
+
+```{r}
+power.t.test(delta = 4, sd = 2.2, sig.level = 0.05, power = 0.80)
+```
+The researchers will need 6 new enrollees in each interface.
+
+
+## Problem 4
+
+ 
+
+**True / False: ANOVA:** Determine if the following statements are true or false in ANOVA, and explain your reasoning for statements you identify as false.
+
+ 
+
+a) As the number of groups increases, the modified significance level for pairwise tests increases as well.  
+False. As the number of groups increase the modified significance level for pairwise tests decreases.    
+
+ 
+
+b) As the total sample size increases, the degrees of freedom for the residuals increases as well.  
+True.   
+
+ 
+
+c) The constant variance condition can be somewhat relaxed when the sample sizes are relatively consistent across groups.  
+True.   
+
+ 
+
+d) The independence assumption can be relaxed when the total sample size is large.  
+False. Independence is always required for any n.  
+
+ 
+
+**For parts e-h: If the null hypothesis that the means of four groups are all the same is rejected using ANOVA at a 5% significance level, then ...**
+
+ 
+
+e) we can then conclude that all the means are different from one another.
+False, we can conclude at least one of the means is different.   
+
+ 
+
+f) the standardized variability between groups is higher than the standardized variability within groups.
+False. We do not know this for certain, as there still may be a large variability between groups.   
+
+ 
+
+g) the pairwise analysis will identify at least one pair of means that are significantly different.
+True.  
+
+ 
+
+h) the appropriate alpha to be used in pairwise comparisons is 0.05 / 4 = 0.0125 since there are four groups.
+True.
+
+
+
+## Problem 5
+
+**Legalization of marijuana:** The 2010 General Social Survey asked 1,259 US residents: "Do you think the use of marijuana should be made legal, or not?" 48% of the respondents said it should be made legal.
+
+a) Is 48% a sample statistic or a population parameter? Explain.
+
+It is a sample statistic. 48% was derived from a subset of the population, therefore it is not a population parameter.
+
+b) Construct a 95% confidence interval for the proportion of US residents who think marijuana should be made legal, and interpret it in the context of the data.
+
+```{r}
+c(0.48-qnorm(0.975)*sqrt((0.48*(1-0.48))/1259),
+0.48+qnorm(0.975)*sqrt((0.48*(1-0.48))/1259))
+```
+We are 95% confident that the true population parameter falls between these two values.
+
+c) A critic points out that this 95% confidence interval is only accurate if the statistic follows a normal distribution, or if the normal model is a good approximation. Is this true for these data? Explain.
+
+Yes, the confidence interval uses CLT to calculate the values. CLT relies on the data distribution being normal. The sample size is larger than 10 so we can use this method for the calculation.
+
+d) A news piece on this survey’s findings states, "Majority of Americans think marijuana should be legalized."" Based on your confidence interval, is this news piece’s statement justified?
+
+No, the confidence interval lower bound is less than or equal to 0.5 so that conclusion cannot be made from this sample.
+
+
+## Problem 6
+
+**Quarantine:** A Marist poll was conducted on October 23rd, 2014 which asked whether anyone that came into contact with a  doctor that recently returned from treating Ebola in Guinea should have a mandatory quarantine. The data are in the `quarantine` variable in the `ebola_survey` dataset in the `openintro` package.
+
+a) What is the point estimate for the proportion of New York adults who favor a mandatory quarantine?
+```{r}
+data(ebola_survey)
+str(ebola_survey)
+n <-nrow(ebola_survey)
+xfavor<-854
+p_hat<-xfavor/n
+p_hat
+```
+
+##81.96% is the point estimate for the proportion of NY adults who favor a mandatory quarantine that we might see if we collected responses from the entire populations of NY adults.
+
+b) Construct a 90% confidence interval for the proportion of New York adults who favor a mandatory quarantine. Is there evidence that more than 3/4 of New York adults favor a mandatory quarantine?
+
+```{r}
+Z_crit<-qnorm(c(0.05, 0.95))
+Z_crit
+```
+```{r}
+n<-1042
+p_est<-854/1042
+SE<-sqrt(p_hat*(1-p_hat)/n)
+SE
+```
+```{r}
+CI<-p_est + Z_crit * SE
+CI
+```
+```{r}
+prop.test(x=854, n=1042, conf.level = 0.9)
+```
+## Yes, there is evidence that more than 3/4 of NY adults favor a mandatory quarantine. There is a 90% confidence that the true proportion of NY adults favoring a mandatory quarantine is between 80 and 84%. Because the confidence interval is more than 75% you can conclude that there is evidence of more than 3/4 NY adults favoring a mandatory quarantine.
+c) Assume the Mayor of New York will decide to institute a quarantine if at least 80% of the public is in favor of the quarantine. Test whether at least 80% of the public is in favor of the quarantine at a significance level of 0.05
+
+##H0: p<0.8
+##Ha: p>=0.8
+```{r}
+p_hat<-854/1042
+p_0<-0.8
+n<-1042
+Z_test <- (p_hat - p_0) / sqrt(p_0 * (1 - p_0) / n)
+Z_test
+```
+```{r}
+p_value<-pnorm(Z_test, lower.tail = FALSE)
+p_value
+```
+```{r}
+prop.test(x=854, n=1042, p=0.8, alternative = "greater" , correct = FALSE)
+```
+##p_value > alpha: Fail to reject Ho
+##0.057>0.05: Fail to reject Ho
+##Because the p_value is more than the significance level, you fail to reject the null hypothesis which says that less than 80% of the public favors the quarantine. Thus you cannot conclude that more than 80% of NY adults favor the quarantine.
+
+
+## Problem 7 
+
+**Acetaminophen and liver damage:** It is believed that large doses of acetaminophen (the active ingredient in over the counter pain relievers like Tylenol) may cause damage to the liver. A researcher wants to conduct a study to estimate the proportion of acetaminophen users who have liver damage. For participating in this study, he will pay each subject $20 and provide a free medical consultation if the patient has liver damage.
+
+a) If he wants to limit the margin of error of his 98% confidence interval to 2%, what is the minimum amount of money he needs to set aside to pay his subjects?
+```{r}
+ME<-0.02
+Z_crit<-qnorm(0.01)
+p<-0.5
+n<-p * (1 - p) / (ME^2 / Z_crit^2)
+n
+```
+```{r}
+payment<-n*20
+payment
+```
+b) The amount you calculated in part (a) is substantially over his budget so he decides to use fewer subjects. How will this affect the width of his confidence interval?
+##The confidence interval will be wider because SE depends on the size of n. When you decrease n you make SE larger because SE=sqrt(p_hat*(1-p_hat)/n). Increasing SE will result in a wider confidence interval because CI = p_hat +/- Z(SE).
+
+
+## Problem 8
+
+**Body Scanners and Political Party:**  A news article reports that “Americans have differing views on two potentially inconvenient and invasive practices that airports could implement to uncover potential terrorist attacks.” This news piece was based on a survey conducted among a random sample of 1,137 adults nationwide, interviewed by telephone November 7-10, 2010, where one of the questions on the survey was “Some airports are now using ‘full-body’ digital x-ray machines to electronically screen passengers in airport security lines. Do you think these new x-ray machines should or should not be used at airports?” Use the `full_body_scan` dataset from the `openintro` package, answer the following questions.
+
+a) Generate a table that shows how people feel (`answer`) about the use of body scanners by political affiliation (`party_affiliation`).
+```{r}
+table(full_body_scan)
+```
+
+b) Generate a graphical figure that shows how people feel about the use of body scanners by political affiliation.
+
+```{r}
+ggplot(full_body_scan, aes(x=party_affiliation, fill=answer)) + geom_histogram(stat="count", position = 'dodge') 
+```
+
+c) Construct a 90% confidence interval for the difference in proportion of Democrats and Republicans that answer "should" use the body scanner.
+
+```{r}
+pro_dem <- nrow(full_body_scan[which(full_body_scan$party_affiliation=='Democrat' & full_body_scan$answer=='should'),])
+total_dem <- nrow(full_body_scan[which(full_body_scan$party_affiliation=='Democrat'),])
+
+
+pro_rep <- nrow(full_body_scan[which(full_body_scan$party_affiliation=='Republican' & full_body_scan$answer=='should'),])
+total_rep <- nrow(full_body_scan[which(full_body_scan$party_affiliation=='Republican'),])
+
+ratio_dem<-pro_dem/total_dem
+ratio_rep<-pro_rep/total_rep
+
+p <- ratio_dem - ratio_rep
+
+c(p - qnorm(0.95)*sqrt((ratio_dem * (1-ratio_dem)/total_dem) + (ratio_rep * (1-ratio_rep)/total_rep)), p + qnorm(0.95)*sqrt((ratio_dem * (1-ratio_dem)/total_dem) + (ratio_rep * (1-ratio_rep)/total_rep)))
+
+```
+
+d) Interpret the confidence interval from above.
+
+We are 90% confident that the difference in proportions between Democrats and Republicans falls within this confidence interval.
+
+e) Perform a test for the difference in proportion of Independents and Republicans that answer "should" use the body scanner. Use a significance level of 0.05.
+
+Null: p1 = p2
+
+```{r}
+pro_ind <- nrow(full_body_scan[which(full_body_scan$party_affiliation=='Independent' & full_body_scan$answer=='should'),])
+total_ind <- nrow(full_body_scan[which(full_body_scan$party_affiliation=='Independent'),])
+
+pro_rep <- nrow(full_body_scan[which(full_body_scan$party_affiliation=='Republican' & full_body_scan$answer=='should'),])
+total_rep <- nrow(full_body_scan[which(full_body_scan$party_affiliation=='Republican'),])
+
+ratio_ind<-pro_ind/total_ind
+ratio_rep<-pro_rep/total_rep
+
+p <- ratio_ind - ratio_rep
+
+c(p - qnorm(0.975)*sqrt((ratio_ind * (1-ratio_ind)/total_ind) + (ratio_rep * (1-ratio_rep)/total_rep)), p + qnorm(0.975)*sqrt((ratio_ind * (1-ratio_ind)/total_ind) + (ratio_rep * (1-ratio_rep)/total_rep)))
+```
+
+The confidence interval contains 0 so we fail to reject the null hypothesis.
+
+f) The conclusion of the test in part f) may be incorrect, meaning an error was made. If an error was made, was it a type I or type II error? Explain.
+
+Type II. If we fail to reject a false hypothesis then the error is type II.
+
+
+
+
+
+
+
+
+
+

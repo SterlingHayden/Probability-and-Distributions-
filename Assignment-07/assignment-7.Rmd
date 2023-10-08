@@ -1,0 +1,503 @@
+---
+title: "Assignment 7"
+author: "John Tipton"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+urlcolor: blue
+---
+
+```{r setup, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 5, fig.height = 3, fig.align = "center")
+library(here)
+library(openintro)
+library(ggplot2)
+library(knitr)
+#source(here("R", "multiplot.R"))
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+
+
+# Introduction
+
+
+Submit the compiled HW to gradescope.
+
+
+# Learning objectives
+
+This homework will provide practice in testing goodness of fit, testing for independence, and an introduction to linear regression.
+
+
+## Problem 1
+
+**Open source textbook:** A professor using an open source introductory statistics book predicts that 60% of the students will purchase a hard copy of the book, 25% will print it out from the web, and 15% will read it online. At the end of the semester he asks his students to complete a survey where they indicate what format of the book they used. Of the 126 students, 71 said they bought a hard copy of the book, 30 said they printed it out from the web, and 25 said they read it online. USe an alpha level of $\alpha$ = 0.05.
+
+a) State the hypotheses for testing if the professor’s predictions were inaccurate.
+H_o = P(hard copy)=.6 , P(print)=.25 , p(online)=.15  
+H_a = At least one of the claimed probabilities is different  
+
+b) How many students did the professor expect to buy the book, print the book, and read the book exclusively online?
+The professor expected 75.6 students to purchase a hard copy, 31.5 students to print the book from the web, and 18.9 students to read the book online.  
+
+c) This is an appropriate setting for a chi-square test. List the conditions required for a test and verify they are satisfied.
+```{r}
+U <- c(.6, .25, .15)
+V <- -(c(.6, .25, .15) - 1)
+tot <- c(126,126,126)
+U * t(tot)
+V * t(tot)
+```
+For all k, np and n(1-p) >= 10. Test conditions are satisfied.    
+
+d) Calculate the chi-squared statistic, the degrees of freedom associated with it, and the p-value.
+```{r}
+O <- c(71, 30, 25)
+E <- c(.6, .25, .15) * 126
+chi2_test <- sum((O - E)^2 / E)
+chisq.test(O, p = c(.6, .25, .15))
+```
+e) Based on the p-value calculated in part (d), what is the conclusion of the hypothesis test? Interpret your conclusion in this context.
+Because our p-value of .3135 is greater than alpha, we fail to reject the null hypothesis. there is not enough evidence to claim that student textbook habits do not follow the professors probabilities.  
+
+
+
+
+## Problem 2
+
+**Full Body Scan:** The table below summarizes a data set we first encountered in Assignment 6 regarding views on full-body scans and political affiliation. The differences in each political group may be due to chance. Complete the following computations under the null hypothesis of independence between an individual’s party affiliation and his support of full-body scans. It may be useful to first add on an extra column for row totals before proceeding with the computations.
+
+```{r}
+data("full_body_scan")
+tibb <- kable(table(full_body_scan))
+test <- table(full_body_scan)
+m41 <- sum(test[,1])
+m42 <- sum(test[,2])
+m43 <- sum(test[,3])
+table_df <- rbind(test, c(m41,m42,m43))
+table_df
+```
+
+
+a) How many Republicans would you expect to not support the use of full-body scans? 
+```{r}
+table_df[3,3]/m43
+```
+b) How many Democrats would you expect to support the use of full-body scans?
+```{r}
+table_df[2,1]/m41
+```
+c) How many Independents would you expect to not know or not answer?
+```{r}
+table_df[1,2]/m42
+```
+d) Test for an association between political party and preference of body scans with $\alpha = 0.05$.
+```{r}
+chisq.test(test)
+```
+
+
+## Problem 3
+
+**Visualize the residuals:** The two scatterplots below show observed data with a regression line. If you were to construct a plot of the residuals vs. the x-axis, describe what these residual plots would look like.
+
+```{r, echo = FALSE, out.width = "100%"}
+set.seed(404)
+n <- 40
+x <- runif(n)
+beta <- c(2, 3)
+dat <- data.frame(x = x, y  = beta[1] + beta[2] * x + rnorm(n))
+p1 <- ggplot(data = dat, aes(x = x, y = y)) +
+  geom_point() +
+  geom_abline(intercept = beta[1], slope = beta[2]) +
+  ggtitle("(a)")
+
+set.seed(44)
+n <- 40
+x <- runif(n)
+beta <- c(2, 3)
+dat <- data.frame(x = x, y  = beta[1] + beta[2] * x + rnorm(n, 0, x * x))
+p2 <- ggplot(data = dat, aes(x = x, y = y)) +
+  geom_point() +
+  geom_abline(intercept = beta[1], slope = beta[2]) +
+  ggtitle("(b)")
+
+multiplot(p1, p2, cols = 2)
+```
+#a).The residuals will show almost a fan shape, with higher variability for smaller x values. The model is less fit here. b).The residual plot will show randomly distributed residuals within the larger x values, but values closer to the linear regression line from 0.00 to around 0.375. The variance is also approximately constant, the model is more fit here.
+
+
+
+
+
+## Problem 4
+
+ **Identify the Relationship:** For each of the six plots, identify the strength of the relationship (e.g. weak, moderate, or strong) in the data and whether fitting a linear model would be reasonable.
+
+
+```{r, echo = FALSE, out.width = "100%"}
+set.seed(11)
+n <- 100
+x <- runif(n) 
+beta <- c(0, -4, 4)
+dat <- data.frame(x = x, y  = beta[1] + beta[2] * x + beta[3] * x^2 + rnorm(n, 0, .1))
+p1 <- ggplot(data = dat, aes(x = x, y = y)) +
+  geom_point(size = 0.75)  +
+  ggtitle("(a)")
+
+set.seed(11)
+n <- 100
+x <- runif(n) 
+beta <- c(0, -4)
+dat <- data.frame(x = x, y  = beta[1] + beta[2] * x + rnorm(n, 0, 2))
+p2 <- ggplot(data = dat, aes(x = x, y = y)) +
+  geom_point(size = 0.75)  +
+  ggtitle("(b)")
+
+set.seed(11)
+n <- 100
+x <- runif(n) 
+beta <- c(0, 4)
+dat <- data.frame(x = x, y  = beta[1] + beta[2] * x + rnorm(n, 0, 0.2))
+p3 <- ggplot(data = dat, aes(x = x, y = y)) +
+  geom_point(size = 0.75)  +
+  ggtitle("(c)")
+
+set.seed(11)
+n <- 100
+x <- runif(n) 
+beta <- c(0, -4)
+dat <- data.frame(x = x, y  = beta[1] + beta[2] * cos(3.2 * pi * x) + rnorm(n, 0, 1))
+p4 <- ggplot(data = dat, aes(x = x, y = y)) +
+  geom_point(size = 0.75)  +
+  ggtitle("(d)")
+
+set.seed(11)
+n <- 100
+x <- runif(n) 
+beta <- c(0, 4)
+dat <- data.frame(x = x, y  = beta[1] + beta[2] * x + rnorm(n, 0, 0.4 * x))
+p5 <- ggplot(data = dat, aes(x = x, y = y)) +
+  geom_point(size = 0.75)  +
+  ggtitle("(e)")
+
+set.seed(11)
+n <- 100
+x <- runif(n) 
+beta <- c(0, 4)
+dat <- data.frame(x = x, y  = exp(beta[1] + beta[2] * x + rnorm(n, 0, 0.4 * x)))
+p6 <- ggplot(data = dat, aes(x = x, y = y)) +
+  geom_point(size = 0.75)  +
+  ggtitle("(f)")
+
+multiplot(p1, p2, p3, p4, p5, p6, cols = 3)
+```
+a) Strong, unreasonable.
+b) Weak, unreasonable.
+c) Strong, reasonable.
+d) Strong, unreasonable.
+e) Strong, reasonable.
+f) Moderate, unreasonable.
+
+
+
+
+
+## Problem 5
+
+**Trees:** The scatterplots below show the relationship between height, diameter, and volume of timber in 31 felled black cherry trees. The diameter of the tree is measured 4.5 feet above the ground.
+
+```{r}
+data("trees")
+p1 <- ggplot(data = trees, aes(x = Height, y = Volume)) +
+  geom_point(size = 0.75) +
+  xlab("Height (feet)") +
+  ylab("Volume (cubic feet)")
+
+p2 <- ggplot(data = trees, aes(x = Girth, y = Volume)) +
+  geom_point(size = 0.75) +
+  xlab("Diameter (inches)") +
+  ylab("Volume (cubic feet)")
+multiplot(p1, p2, cols = 2)
+```
+
+a) Describe the relationship between volume and height of these trees.
+#Generally as the volume increases, the height increases. This is a positive correlation.
+The volume and height of the trees have a positive linear relationship with high variance.
+
+b) Describe the relationship between volume and diameter of these trees.
+
+The volume and diameter of the trees have a positive linear relationship with low variance.
+#As the diameter gets larger, so does tree volume. This is a positive correlation.
+c) Suppose you have height and diameter measurements for another black cherry tree. Which of these variables would be preferable to use to predict the volume of timber in this tree using a simple linear regression model? Explain your reasoning.
+Diameter measurements will give more accurate results. The variance of the Volume vs Diameter model is much lower than the Volume vs Height model, therefore predictions using a model based on the Volume vs Diameter data will be more precise.
+#It would be more telling to use the diameter measurement to predict tree volume. One of my reaseonings for this observation is the fact that there is a stronger, tighter correlation between the diameter seen in the 31 measured trees and their corresponding volume measurements. There is a notable trend between the diameter and volume, therefore, it would be easier to obtain the volume of another tree using simple linear regression model from the Diameter vs Volume graph.
+
+
+## Problem 6
+
+**Body measurements:** The `bdims` data in the `openintro` packages introduces data on shoulder girth (`sho.gi`) and height (`hgt`) of a group of individuals. 
+
+```{r}
+data("bdims")
+```
+
+a) Calculate the mean and standard deviation for shoulder girth.
+```{r}
+data("bdims")
+df <- data.frame(bdims)
+mean(df$sho_gi)
+sd(df$sho_gi)
+```
+b) Calculate the mean and standard deviation for height
+```{r}
+data("bdims")
+df <- data.frame(bdims)
+mean(df$hgt)
+sd(df$hgt)
+```
+c) Calculate the linear correlation between should girth and height.
+```{r}
+data("bdims")
+df <- data.frame(bdims)
+x <- (df$sho_gi)
+y <- (df$hgt)
+cor.test(x, y)
+```
+d) Write the equation of the regression line for predicting height.
+```{r}
+data("bdims")
+df <- data.frame(bdims)
+x <- (df$sho_gi)
+y <- (df$hgt)
+summary(lm(y ~ x, df = df$hgt))
+```
+#y = 105.83246 + 0.60364x
+e) Interpret the slope and the intercept in this context.
+#The slope is positive and it intercepts the y axis at 105.83246.
+f) Calculate $R^2$ of the regression line for predicting height from shoulder girth, and interpret it in the context of the application.
+#The proportion of variability in y explained by x is the coefficient of determination, 0.4432, this means that about 44% of the variation in height is explained by shoulder girth.
+g) A randomly selected student from your class has a shoulder girth of 100 cm. Predict the height of this student using the model.
+#166.19646
+h) The student from part (g) is 160 cm tall. Calculate the residual, and explain what this residual means.
+#if the student is 160cm tall (your y is 160), you would find x (shoulder girth) with the following equation, 160= 105.83246 + 0.60364x.x = 89.734842. However, part g says that the students shoulder girth is 100 cm. The difference between these two numbers are known as the residuals. The height residual or difference between what the linear regression equation would have given versus that which is true (actual height and predicted height) is -6.19646. 
+i) A one year old has a shoulder girth of 56 cm. Would it be appropriate to use this linear model to predict the height of this child?
+#It would probably not be best to use this model being that the r-squared value or coefficient of determination is less than .5. This shows that not the variation in height is only somewhat related to shoulder width even after sampling over 500 individuals. Also, being that the youngest person sampled is 15, it is hard to draw conclusions for a one-year old since no other one year olds were used in the sampling population.
+
+
+
+
+## Problem 7
+
+**Husbands and wives:** The data below contain a random sample of 170 married couples in Britain, where both partners’ ages are below 65 years. The data include the variables that describe the husbands’ and wives’ heights in mm. Use the `husbands_wives` dataset in the `openintro` package for the following questions.
+
+
+```{r}
+data("husbands_wives")
+str(husbands_wives)
+```
+
+a) Generate a scatter plot with `Ht_Husband` on the x-axis and `Ht_Wife` on the y-axis.
+
+```{r}
+ggplot(husbands_wives, aes(x = ht_husband, y = ht_wife)) +
+geom_point() +
+stat_smooth(method = "lm")
+```
+
+
+b) Fit a linear regression model to explain the height of a wife in the data given the height of the husband.
+
+```{r}
+rm <- lm(ht_wife ~ ht_husband, data = husbands_wives)
+rm_fit <- rm$coefficients
+rm_fit
+```
+**The linear regression model to explain the height of a wife in the data given the height
+of the husband is:
+
+htw = 1028.5717662 + 0.3309555 × hth
+
+
+c) Is there strong evidence that taller men marry taller women? State the hypotheses and include any information used to conduct the test.
+
+**Hypothesis:
+Null Hypothesis: There is no association between husbands’ height and wives’ height. Alternative
+Hypothesis: There is an association between husbands’ height and wives’ height.
+
+```{r}
+summary(rm)
+```
+Test Statistics: 30.17(F-statistics with degrees of freedom 1 and 197).
+P-value: 1.212e-07.
+Decision: Taking level of significance 0.05, we can reject the null hypothesis, as p-value is less than 0.05.
+Result: Based on our data, there is strong evidence to support the claim that there is an association
+between husbands’ height and wives’ height, that is, taller men marry taller women.
+
+
+d) Write the equation of the regression line for predicting wife’s height from husband’s height.
+
+```{r}
+rm <- lm(ht_wife ~ ht_husband, data = husbands_wives)
+rm_fit <- rm$coefficients
+rm_fit
+```
+**The equation of the regression line for predicting wife’s height from husband’s height is:
+
+htwife = 1028.5717662 + 0.3309555 × hth
+
+e) Interpret the slope and intercept in the context of the application.
+
+The slope 0.3309555 means for each unit increase in husband’s height the average
+
+increase in wife’s height would be 0.3309555 mm. And the intercept 1028.5717662 indi-
+cates that for zero height of husband the average height of wife would be 1028.5717662 mm
+
+
+f) Given the value of $R^2$ in the regression, what is the correlation of heights in this data set?
+
+```{r}
+R_2 <- 0.1328
+sqrt(R_2)
+```
+**The correlation of heights in this data set is 0.3644173
+
+g) What proportion of variability in the height of the wife is explained by the height of the husband?
+
+R2 of the regression line for predicting wife’s height from husband’s height is 0.1328. This
+means that the proportion of variability in wife’s height explained by husband’s height is
+0.1328.
+
+
+
+
+## Problem 8
+
+**Husbands and wives (continued):** The data below include husbands’ and wives’ heights in a random sample of 170 married couples in Britain, where both partners’ ages are below 65 years. Use the `husbands_wives` dataset in the `openintro` package for the following questions. (**hint:** write a function that converts from mm to inches -- 25.4 mm per inch).
+
+```{r}
+mm_inches <- function(m){
+inch <- m/25.4
+inch
+}
+inches_mm <- function(inch){
+mm <- inch * 25.4
+mm
+}
+```
+
+
+a) You meet a married man from Britain who is 5’9” (69 inches). What would you predict his wife’s height to be? How reliable is this prediction? 
+
+```{r}
+man_inch <- 69
+man_mm <- inches_mm(man_inch)
+pred_woman_mm <- 1028.5717662 + 0.3309555 * man_mm
+pred_woman_inch <- mm_inches(pred_woman_mm)
+pred_woman_inch
+```
+```{r}
+predict(rm, newdata = data.frame(ht_husband = man_mm), interval = "confidence", level = 0.95) / 25.4
+```
+**We would predict his wife’s height to 63.33088.
+
+
+b) Generate a 95% confidence interval for this prediction. What is the 95% confidence interval for the average height of women married to men in Britain who are 5'9" (69 inches) tall? Also genereate a 95% prediction interval for Mr. Bean's's wife where Mr. Bean is 5'9" tall.
+
+```{r}
+pred_mm <- predict(rm, newdata = data.frame(ht_husband = man_mm), interval = "confidence", level = 0.95)
+pred_inch <- mm_inches(pred_mm)
+pred_inch[c(2,3)]
+```
+** The 95% confidence interval for the average height of women married to men in Britain who
+is 5’9" (69 inches) tall is (62.99657, 63.66520).
+Mr. Bean is 5’9" tall, so 95% prediction interval for Mr. Bean’s wife is (62.99657, 63.66520).
+
+c) You meet another married man from Britain who is 6’7” (79 inches). Would it be wise to use the same linear model to predict his wife’s height? Why or why not?
+
+```{r}
+minimum_ht <- min(husbands_wives$ht_husband)
+maximum_ht <- max(husbands_wives$ht_husband)
+mm_inches(c(minimum_ht, maximum_ht))
+```
+** No. Husband’s height being 79 is much larger than the scopes of our data. If we try predict
+wife’s height with this value our model may not give an accurate prediction. So, it would not
+be wise to use the same linear model to predict the man’s wife’s height.
+
+d) Generate 90% intervals for the predictions in part (b).
+
+```{r}
+pred_mm <- predict(rm, newdata = data.frame(ht_husband = man_mm), interval = "confidence", level = 0.90)
+pred_inch <- mm_inches(pred_mm)
+pred_inch[c(2,3)]
+```
+** The 90% confidence interval for the average height of women married to men in Britain who
+is 5’9" (69 inches) tall is (62.99657, 63.66520).
+
+e) Check the assumptions of the linear regression model (Note: this will require at minimum one residual plot, one qqplot, and one histogram)
+
+```{r}
+p1 <- ggplot(data = husbands_wives, aes(x = ht_husband, y = ht_wife)) +
+
+geom_point() +
+stat_smooth(method = "lm") +
+labs(title = 'Scatter Plot', x = 'Height of Husbands', y = 'Height of wives')
+
+p2 <- ggplot(lm(ht_wife ~ ht_husband, data = husbands_wives)) +
+geom_point(aes(x = ht_husband, y = .resid)) +
+geom_hline(aes(yintercept = 0), lty = 2) +
+labs(title = 'Residual Plot')
+
+p3 <- ggplot(lm(ht_wife ~ ht_husband, data = husbands_wives)) +
+
+geom_histogram(aes(.resid)) +
+labs(title = 'Histogram of Residuals', x = 'Residuals', y = 'Frequency')
+p4 <- ggplot(lm(ht_wife ~ ht_husband, data = husbands_wives), aes(sample = .resid))+
+
+stat_qq()+
+stat_qq_line()+
+labs(title = 'QQ-Plot of Residuals')
+
+multiplot(p1, p2, p3, p4, cols = 2)
+```
+
+
+
+
+
+
